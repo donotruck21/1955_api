@@ -1,0 +1,123 @@
+<html ng-app="peoples_app">
+<head>
+	<title>1955</title>
+	<!-- Materialize Library CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/js/materialize.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Materialize END -->
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+	<script type="text/javascript">
+		var peoples_app = angular.module('peoples_app', []);
+
+
+		//PEOPLE FACTORY
+
+		peoples_app.factory('PeopleFactory', function($http) {
+			var factory = {};
+			var people = [];
+
+			factory.index = function(callback) {
+				$http.get('/people').success(function(output) {
+					people = output;
+					callback(people)
+				})
+			}
+
+			factory.create = function(info, callback) {
+				console.log("in factory create", info)
+				$http.get('/people/' + info).success(function(output) {
+					callback()
+				})
+			}
+
+			factory.delete = function(person_id, callback) {
+				$http.delete('/people/' + person_id).success(function(output) {
+					callback()
+				})
+			}
+
+			return factory;
+		})
+
+
+		//PEOPLES CONTROLLER
+
+		peoples_app.controller('PeoplesController', function($scope, PeopleFactory) {
+			PeopleFactory.index(function(data) {
+				$scope.peoples = data;
+			})
+
+			$scope.addPerson = function() {
+				console.log($scope.newPerson)
+
+				PeopleFactory.create($scope.newPerson, function() {
+					console.log("made it back, running callback...")
+					PeopleFactory.index(function(data) {
+						$scope.peoples = data;
+					})
+				})
+
+				$scope.newPerson = "";
+			}
+
+			$scope.removePerson = function(person_id) {
+				console.log("clicked remove btn")
+  				console.log(person_id)
+
+  				PeopleFactory.delete(person_id, function() {
+  					console.log("made it back after deleteing, run callback function to refresh!")
+  					PeopleFactory.index(function(data) {
+						$scope.peoples = data;
+					})
+  				})
+			}
+		})
+
+	</script>
+</head>
+<body>
+	<div ng-controller="PeoplesController">
+		<div class="container">
+			<h2>1955 Dashboard <i>redux</i></h2>
+			<hr>
+			<br><br>
+
+			<p><u>Add people who were born in 1955!</u></p>
+			<form>
+				<input type="text" name="name" ng-model="newPerson" autofocus>
+				<input type="submit" value="submit" ng-click="addPerson()" class="btn">
+			</form>
+
+			<table class="bordered striped">
+				<thead>
+					<th>Name</th>
+					<th>Action</th>
+				</thead>
+				<tbody>
+					<tr ng-repeat="person in peoples">
+						<td>{{ person.name }}</td>
+						<td><button ng-click="removePerson(person._id)" class="btn-floating red iblock"><i class="material-icons">delete</i>></button></td>
+					</tr>
+				</tbody>
+			</table>
+			<br><br><br><br>
+		</div>
+	</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
